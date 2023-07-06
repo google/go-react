@@ -17,6 +17,7 @@ package prompters_test
 import (
 	"context"
 	"errors"
+	"strings"
 	"testing"
 
 	"github.com/google/go-react/pkg/prompters"
@@ -24,14 +25,21 @@ import (
 
 func TestTextTemplate(t *testing.T) {
 	t.Parallel()
-	p := prompters.NewTextTemplate[map[string]any, int]("Hello {{.Name}}", 99)
+	p := prompters.NewTextTemplate[map[string]any, int](
+		"Hello {{.Name}}",
+		99,
+		func(p map[string]any) map[string]any {
+			p["Name"] = strings.ToUpper(p["Name"].(string))
+			return p
+		},
+	)
 	val, params, err := p.Hydrate(context.Background(), map[string]any{
 		"Name": "World",
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if actual, expected := val, "Hello World"; actual != expected {
+	if actual, expected := val, "Hello WORLD"; actual != expected {
 		t.Fatalf("expected %q, got %q", expected, actual)
 	}
 	if actual, expected := params, 99; actual != expected {
