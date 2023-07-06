@@ -51,9 +51,19 @@ type ThoughtIteration[TOut any] struct {
 
 // PromptData is the data used to hydrate the ReAct prompt.
 type PromptData[TOut any] struct {
-	Tools  []tools.Tool
-	Goal   string
-	Chains []ThoughtIteration[TOut]
+	Tools    []tools.Tool
+	Goal     string
+	Chains   []ThoughtIteration[TOut]
+	Preamble string
+	Examples []PromptDataExample[TOut]
+	Rules    []string
+}
+
+// PromptDataExample is an example used to build up the prompt.
+type PromptDataExample[TOut any] struct {
+	Question        string
+	PreviousContext []ThoughtIteration[TOut]
+	Output          Reasoning[TOut]
 }
 
 // NewAgent returns a new ReAct Agent. It properly wraps the basePredictor in the
