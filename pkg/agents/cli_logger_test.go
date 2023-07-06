@@ -29,6 +29,7 @@ func TestCLILogger(t *testing.T) {
 
 	testCases := []struct {
 		name   string
+		opts   []agents.CLILoggerOption[FinalAnswer]
 		req    agents.PromptData[FinalAnswer]
 		setup  func(*predictorstesting.Fake[agents.PromptData[FinalAnswer], agents.Reasoning[FinalAnswer]])
 		assert func(*testing.T, *predictorstesting.Fake[agents.PromptData[FinalAnswer], agents.Reasoning[FinalAnswer]], agents.Reasoning[FinalAnswer], error, string)
@@ -101,6 +102,22 @@ func TestCLILogger(t *testing.T) {
 				}
 			},
 		},
+		{
+			name: "sets a prefix",
+			opts: []agents.CLILoggerOption[FinalAnswer]{
+				agents.WithCLILoggerPrefix[FinalAnswer]("some-prefix"),
+			},
+			setup: func(f *predictorstesting.Fake[agents.PromptData[FinalAnswer], agents.Reasoning[FinalAnswer]]) {
+				f.Resps = []agents.Reasoning[FinalAnswer]{
+					{Thought: "some-thought", Action: "some-action", Input: "some-input"},
+				}
+			},
+			assert: func(t *testing.T, f *predictorstesting.Fake[agents.PromptData[FinalAnswer], agents.Reasoning[FinalAnswer]], actualResp agents.Reasoning[FinalAnswer], err error, out string) {
+				if actual, expected := out, "\x1b[34m[some-prefix]\x1b[0m \x1b[32mThought: \"some-thought\" Action: \"some-action\" Input: \"some-input\"\x1b[0m\n"; actual != expected {
+					t.Fatalf("expected %q, got %q", expected, actual)
+				}
+			},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -114,7 +131,7 @@ func TestCLILogger(t *testing.T) {
 				tc.setup(f)
 			}
 			buf := &bytes.Buffer{}
-			logger := agents.NewCLILogger[FinalAnswer](f, buf)
+			logger := agents.NewCLILogger[FinalAnswer](f, buf, tc.opts...)
 
 			resp, err := logger.Predict(context.Background(), tc.req)
 			tc.assert(t, f, resp, err, buf.String())
