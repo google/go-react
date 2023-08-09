@@ -55,7 +55,8 @@ Examples:
   {{range $index, $element := .Examples}}Example {{$index}}:
   Question: {{$element.Question}}
   Previous Context: {{if not $element.PreviousContext}}null{{else}}
-  {{range $element.PreviousContext}}{{ToJSON .}}{{end}}{{end}}
+  {{range $element.PreviousContext}}{{ToJSON .}}
+  {{end}}{{end}}
 
   Output:
   {{ToJSON $element.Output}}
