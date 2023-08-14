@@ -25,9 +25,9 @@ var ErrInvalidToolInput = errors.New("invalid tool input")
 
 // Tool is a struct that describes the given tool.
 type Tool struct {
-	Name        string                                                  `json:"Name,omitempty"`
-	Description string                                                  `json:"Description,omitempty"`
-	Examples    []string                                                `json:"Examples,omitempty"`
-	Args        []string                                                `json:"Args,omitempty"`
-	Run         func(ctx context.Context, input string) (string, error) `json:"-"`
+	Name        string                                               `json:"Name,omitempty"`
+	Description string                                               `json:"Description,omitempty"`
+	Examples    []string                                             `json:"Examples,omitempty"`
+	Args        []string                                             `json:"Args,omitempty"`
+	Run         func(ctx context.Context, input string) (any, error) `json:"-"`
 }

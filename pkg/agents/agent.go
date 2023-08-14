@@ -46,7 +46,7 @@ type Reasoning[TOut any] struct {
 // The Observation comes from the requested Action and its associated Input.
 type ThoughtIteration[TOut any] struct {
 	Reasoning[TOut] `json:",inline"`
-	Observation     string `json:"observation,omitempty"`
+	Observation     any `json:"observation,omitempty"`
 }
 
 // PromptData is the data used to hydrate the ReAct prompt.
