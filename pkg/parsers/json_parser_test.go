@@ -42,6 +42,40 @@ extra garbage`)
 	}
 }
 
+func TestJSONParser_withBackticks(t *testing.T) {
+	t.Parallel()
+	p := parsers.NewJSONParser[map[string]int]()
+	val, err := p.Parse("\n```\n{\n\"a\":\n1\n}\n```extra garbage")
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if actual, expected := len(val), 1; actual != expected {
+		t.Fatalf("expected %d, got %d", expected, actual)
+	}
+	if actual, expected := val["a"], 1; actual != expected {
+		t.Fatalf("expected %d, got %d", expected, actual)
+	}
+}
+
+func TestJSONParser_withBackticksAndJson(t *testing.T) {
+	t.Parallel()
+	p := parsers.NewJSONParser[map[string]int]()
+	val, err := p.Parse("\n```json\n{\n\"a\":\n1\n}\n```extra garbage")
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if actual, expected := len(val), 1; actual != expected {
+		t.Fatalf("expected %d, got %d", expected, actual)
+	}
+	if actual, expected := val["a"], 1; actual != expected {
+		t.Fatalf("expected %d, got %d", expected, actual)
+	}
+}
+
 func TestJSONParser_invalid(t *testing.T) {
 	t.Parallel()
 	p := parsers.NewJSONParser[map[string]int]()

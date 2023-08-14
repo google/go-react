@@ -77,6 +77,16 @@ func (c client) Generate(ctx context.Context, prompt string, params Params) (str
 		params.TopP = 0.8
 	}
 
+	var prefix string
+	switch strings.Split(params.Model, "@")[0] {
+	case "text-bison":
+		prefix = "content"
+	case "code-bison":
+		prefix = "prefix"
+	default:
+		prefix = "content"
+	}
+
 	req, err := http.NewRequest(
 		http.MethodPost,
 		fmt.Sprintf(
@@ -88,7 +98,7 @@ func (c client) Generate(ctx context.Context, prompt string, params Params) (str
 		strings.NewReader(fmt.Sprintf(`
 {
   "instances": [
-    { "content": %q }
+    { %q: %q }
   ],
   "parameters": {
 	  "temperature": %f,
@@ -96,7 +106,7 @@ func (c client) Generate(ctx context.Context, prompt string, params Params) (str
 		"topK": %d,
 		"topP": %f
   }
-}`, prompt, params.Temperature, params.MaxTokens, params.TopK, params.TopP)),
+}`, prefix, prompt, params.Temperature, params.MaxTokens, params.TopK, params.TopP)),
 	)
 
 	if err != nil {

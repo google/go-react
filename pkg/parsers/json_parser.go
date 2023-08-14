@@ -29,6 +29,9 @@ func NewJSONParser[T any]() Parser[T] {
 
 // Parse implements Parser.
 func (p *jsonParser[T]) Parse(data string) (T, error) {
+	data = strings.TrimSpace(data)
+	data = strings.Trim(data, "```json")
+	data = strings.Trim(data, "```")
 	var result T
 	err := json.NewDecoder(strings.NewReader(data)).Decode(&result)
 	return result, err

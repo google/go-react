@@ -135,8 +135,9 @@ func withDefaultExamples[TLLMParams, TOut any]() prompters.Option[PromptData[TOu
 	return WithExamples[TLLMParams, TOut](examples...)
 }
 
-var (
-	defaultRules = []string{
+// DefaultRules are the default rules for the ReAct loop.
+func DefaultRules() []string {
+	return []string{
 		"When using a tool, make sure you read the description to ensure it's the right tool and it's used correctly.",
 		"If the user asks what you are capable of doing, give them a summary of the tools you have available and what they do.",
 		"If the user asks you to do something, make sure you have a tool that can do it. If not, tell the user you can't do it.",
@@ -144,7 +145,7 @@ var (
 		"Each thought must follow a plan and should be based on previous thoughts and actions.",
 		"Use the following JSONL format by only appending a single (thought plus action and input) OR (a thought plus a final answer).",
 	}
-)
+}
 
 // NewDefaultPrompt returns the default prompt for a ReAct loop. It's highly
 // recommened to use your own examples to help the LLM return the proper
@@ -157,7 +158,7 @@ func NewDefaultPrompt[TLLMParams, TOut any](
 	// they can override anything we've set with an option.
 	var options []prompters.Option[PromptData[TOut]]
 	options = append(options, WithPreamble[TLLMParams, TOut](defaultPreamble))
-	options = append(options, WithRules[TLLMParams, TOut](defaultRules...))
+	options = append(options, WithRules[TLLMParams, TOut](DefaultRules()...))
 	options = append(options, withDefaultExamples[TLLMParams, TOut]())
 	options = append(options, withDefaultExamples[TLLMParams, TOut]())
 
