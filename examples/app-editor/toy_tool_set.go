@@ -78,7 +78,7 @@ func userInputTool() tools.Tool {
 		Name:        "user-input",
 		Description: "Ask the user a question. The input is what is displayed to the user.",
 		Examples:    []string{"some question to the user"},
-		Run: func(ctx context.Context, input string) (string, error) {
+		Run: func(ctx context.Context, input string) (any, error) {
 			fmt.Printf("AI: %s\n", input)
 
 			// Read a line from the user.
@@ -92,7 +92,7 @@ func listTablesTool(appTemplate *appTemplate) tools.Tool {
 	return tools.Tool{
 		Name:        "list-tables",
 		Description: "List the tables in the app. It does not take any input.",
-		Run: func(ctx context.Context, input string) (string, error) {
+		Run: func(ctx context.Context, input string) (any, error) {
 			var names []string
 			for _, table := range appTemplate.Tables {
 				names = append(names, table.Name)
@@ -113,7 +113,7 @@ func addTableTool(llm llms.LLM[vertex.Params], appTemplate *appTemplate) tools.T
 		Args: []string{
 			"table name",
 		},
-		Run: func(ctx context.Context, input string) (string, error) {
+		Run: func(ctx context.Context, input string) (any, error) {
 			parts := strings.Fields(input)
 			if len(parts) != 1 {
 				return "", fmt.Errorf("%w: should only get one input", tools.ErrInvalidToolInput)
@@ -146,7 +146,7 @@ func removeTableTool(llm llms.LLM[vertex.Params], appTemplate *appTemplate) tool
 		Args: []string{
 			"table name",
 		},
-		Run: func(ctx context.Context, input string) (string, error) {
+		Run: func(ctx context.Context, input string) (any, error) {
 			parts := strings.Fields(input)
 			if len(parts) != 1 {
 				return "", fmt.Errorf("%w: should only get one input", tools.ErrInvalidToolInput)
@@ -185,7 +185,7 @@ func saveAppTemplateTool(appTemplate *appTemplate) tools.Tool {
 		Args: []string{
 			"file name",
 		},
-		Run: func(ctx context.Context, input string) (string, error) {
+		Run: func(ctx context.Context, input string) (any, error) {
 			parts := strings.Fields(input)
 			if len(parts) != 1 {
 				return "", fmt.Errorf("%w: should only get one input", tools.ErrInvalidToolInput)

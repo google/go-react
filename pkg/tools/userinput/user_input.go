@@ -26,7 +26,7 @@ func New() tools.Tool {
 		Name:        "user input",
 		Description: "used to ask a question from the user. Do not use to simply print a message to the user.",
 		Args:        []string{"prompt"},
-		Run: func(ctx context.Context, input string) (string, error) {
+		Run: func(ctx context.Context, input string) (any, error) {
 			fmt.Printf("AI: %s\n", input)
 
 			// Read a line from the user.

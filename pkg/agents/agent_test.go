@@ -320,7 +320,7 @@ func buildFakeTool(name string) tools.Tool {
 		Name:        name,
 		Description: "some-description",
 		Args:        []string{"arg"},
-		Run: func(ctx context.Context, input string) (string, error) {
+		Run: func(ctx context.Context, input string) (any, error) {
 			return fmt.Sprintf("running tool %s: %s", name, input), nil
 		},
 	}
@@ -331,7 +331,7 @@ func buildErrorTool() tools.Tool {
 		Name:        "always-errors",
 		Description: "some-description",
 		Args:        []string{"arg"},
-		Run: func(context.Context, string) (string, error) {
+		Run: func(context.Context, string) (any, error) {
 			return "", errors.New("some error")
 		},
 	}
