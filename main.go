@@ -89,7 +89,7 @@ func main() {
 
 }
 
-func getLLMDeepInfra(ctx context.Context) llms.LLM[vertex.Params] {
+func getLLMDeepInfra(_ context.Context) llms.LLM[vertex.Params] {
 	infra := deepinfra.NewDeepInfraLLM("pgT0g5nBK0FOHgLuhTo8UxEqulaAaptm")
 	return infra
 }
@@ -250,7 +250,7 @@ func removeTableTool(llm llms.LLM[vertex.Params], appTemplate *appTemplate) tool
 				return fmt.Sprintf("Table %s removed", tableName), nil
 			}
 
-			return "failed", fmt.Errorf("Table %s not found", tableName)
+			return "failed", fmt.Errorf("table %s not found", tableName)
 		},
 	}
 }
