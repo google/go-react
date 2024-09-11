@@ -15,8 +15,6 @@
 package agents
 
 import (
-	"reflect"
-
 	"github.com/google/go-react/pkg/parsers"
 	"github.com/google/go-react/pkg/prompters"
 )
@@ -74,65 +72,104 @@ Output:
 `
 )
 
-func withDefaultExamples[TLLMParams, TOut any]() prompters.Option[PromptData[TOut]] {
-	examples := []PromptDataExample[TOut]{
-		{
-			Question:        "Add a table",
-			PreviousContext: nil,
-			Output: Reasoning[TOut]{
-				Thought: "I should figure out what the table should be called",
-				Action:  "user-input",
-				Input:   "What should the table be named?",
-			},
-		},
-	}
+// Outputtable is a constraint for types that can be used as output
+type Outputtable interface {
+	~string | ~int
+}
 
-	// Check to see if the type is a string, if it is, use the
-	// DefaultStringExamples. Otherwise use the DefaultExamples.
-	rexamples := reflect.ValueOf(examples)
-	var out TOut
-	if kind := reflect.ValueOf(&out).Elem().Type().Kind(); kind == reflect.String {
-		// We have to use reflection to append these examples because the compiler
-		// will try to enforce the type of the slice.
-		stringExamples := reflect.ValueOf([]PromptDataExample[string]{
+func withDefaultExamples[TLLMParams any, TOut Outputtable]() prompters.Option[PromptData[TOut]] {
+	return func(p PromptData[TOut]) PromptData[TOut] {
+		examples := []PromptDataExample[TOut]{
 			{
-				Question: "Add a table",
-				PreviousContext: []ThoughtIteration[string]{
-					{
-						Reasoning: Reasoning[string]{
-							Thought: "I should figure out what the table should be called",
-							Action:  "user-input",
-							Input:   "What should the table be named?",
-						},
-						Observation: "employees",
-					},
-					{
-						Reasoning: Reasoning[string]{
-							Thought: "I need to add the table employees",
-							Action:  "add-table",
-							Input:   "employees",
-						},
-						Observation: "table employees added",
-					},
-				},
-				Output: Reasoning[string]{
-					Thought:     "I have finished adding the table employees",
-					FinalAnswer: "I have finished adding the table employees",
+				Question:        "Add a table",
+				PreviousContext: nil,
+				Output: Reasoning[TOut]{
+					Thought: "I should figure out what the table should be called",
+					Action:  "user-input",
+					Input:   "What should the table be named?",
 				},
 			},
-			{
-				Question: "Build a spaceship",
-				Output: Reasoning[string]{
-					Thought:     "I don't have the tools to build a spaceship",
-					FinalAnswer: "I don't have the tools to build a spaceship",
-				},
-			},
-		})
-		rexamples = reflect.AppendSlice(rexamples, stringExamples)
-		examples = rexamples.Interface().([]PromptDataExample[TOut])
-	}
+		}
 
-	return WithExamples[TLLMParams, TOut](examples...)
+		// Use a type switch instead of reflection
+		switch any(*(new(TOut))).(type) {
+		case string:
+			stringExamples := []PromptDataExample[string]{
+				{
+					Question: "Add a table",
+					PreviousContext: []ThoughtIteration[string]{
+						{
+							Reasoning: Reasoning[string]{
+								Thought: "I should figure out what the table should be called",
+								Action:  "user-input",
+								Input:   "What should the table be named?",
+							},
+							Observation: "employees",
+						},
+						{
+							Reasoning: Reasoning[string]{
+								Thought: "I need to add the table employees",
+								Action:  "add-table",
+								Input:   "employees",
+							},
+							Observation: "table employees added",
+						},
+					},
+					Output: Reasoning[string]{
+						Thought:     "I have finished adding the table employees",
+						FinalAnswer: "I have finished adding the table employees",
+					},
+				},
+				{
+					Question: "Build a spaceship",
+					Output: Reasoning[string]{
+						Thought:     "I don't have the tools to build a spaceship",
+						FinalAnswer: "I don't have the tools to build a spaceship",
+					},
+				},
+			}
+			// Safely append string examples by manually converting them
+			for _, ex := range stringExamples {
+				convertedEx := PromptDataExample[TOut]{
+					Question: ex.Question,
+					Output: Reasoning[TOut]{
+						Thought: ex.Output.Thought,
+						Action:  ex.Output.Action,
+						Input:   ex.Output.Input,
+					},
+				}
+
+				// Safely convert FinalAnswer
+				if ex.Output.FinalAnswer != "" {
+					convertedEx.Output.FinalAnswer = any(ex.Output.FinalAnswer).(TOut)
+				}
+
+				// Convert PreviousContext
+				for _, pc := range ex.PreviousContext {
+					convertedPC := ThoughtIteration[TOut]{
+						Reasoning: Reasoning[TOut]{
+							Thought: pc.Thought,
+							Action:  pc.Action,
+							Input:   pc.Input,
+						},
+						Observation: pc.Observation,
+					}
+
+					// Safely convert FinalAnswer
+					if pc.FinalAnswer != "" {
+						convertedPC.FinalAnswer = any(pc.FinalAnswer).(TOut)
+					}
+
+					convertedEx.PreviousContext = append(convertedEx.PreviousContext, convertedPC)
+				}
+
+				examples = append(examples, convertedEx)
+			}
+		}
+
+		p.Examples = examples
+		return p
+	}
 }
 
 // DefaultRules are the default rules for the ReAct loop.
@@ -150,7 +187,7 @@ func DefaultRules() []string {
 // NewDefaultPrompt returns the default prompt for a ReAct loop. It's highly
 // recommened to use your own examples to help the LLM return the proper
 // typing and to better capture your use case.
-func NewDefaultPrompt[TLLMParams, TOut any](
+func NewDefaultPrompt[TLLMParams any, TOut Outputtable](
 	params TLLMParams,
 	opts ...prompters.Option[PromptData[TOut]],
 ) prompters.Prompter[PromptData[TOut], TLLMParams] {
@@ -168,7 +205,7 @@ func NewDefaultPrompt[TLLMParams, TOut any](
 }
 
 // WithPreamble replaces the preamble.
-func WithPreamble[TLLMParams, TOut any](preamble string) prompters.Option[PromptData[TOut]] {
+func WithPreamble[TLLMParams any, TOut Outputtable](preamble string) prompters.Option[PromptData[TOut]] {
 	return func(p PromptData[TOut]) PromptData[TOut] {
 		p.Preamble = preamble
 		return p
@@ -176,7 +213,7 @@ func WithPreamble[TLLMParams, TOut any](preamble string) prompters.Option[Prompt
 }
 
 // WithExamples replaces the default examples with the given examples.
-func WithExamples[TLLMParams, TOut any](examples ...PromptDataExample[TOut]) prompters.Option[PromptData[TOut]] {
+func WithExamples[TLLMParams any, TOut Outputtable](examples ...PromptDataExample[TOut]) prompters.Option[PromptData[TOut]] {
 	return func(p PromptData[TOut]) PromptData[TOut] {
 		p.Examples = examples
 		return p
@@ -184,7 +221,7 @@ func WithExamples[TLLMParams, TOut any](examples ...PromptDataExample[TOut]) pro
 }
 
 // WithRules replaces the default rules with the given rules.
-func WithRules[TLLMParams, TOut any](rules ...string) prompters.Option[PromptData[TOut]] {
+func WithRules[TLLMParams any, TOut Outputtable](rules ...string) prompters.Option[PromptData[TOut]] {
 	return func(p PromptData[TOut]) PromptData[TOut] {
 		p.Rules = rules
 		return p

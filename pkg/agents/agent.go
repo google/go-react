@@ -94,7 +94,7 @@ func NewAgent[TOut any](
 
 func validateTools(ts []tools.Tool) (map[string]tools.Tool, []tools.Tool, error) {
 	m := map[string]tools.Tool{}
-	var toolsSlice []tools.Tool
+	toolsSlice := make([]tools.Tool, len(ts))
 
 	for i, t := range ts {
 		name := normalizeToolName(t.Name)
@@ -110,7 +110,7 @@ func validateTools(ts []tools.Tool) (map[string]tools.Tool, []tools.Tool, error)
 
 		m[name] = t
 		t.Name = name
-		toolsSlice = append(toolsSlice, t)
+		toolsSlice[i] = t
 	}
 
 	return m, toolsSlice, nil
